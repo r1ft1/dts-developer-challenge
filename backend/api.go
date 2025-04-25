@@ -79,3 +79,22 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.ResponseWriter.WriteHeader(w, http.StatusOK)
 	}
 }
+
+func readAllTasksHandler(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query("SELECT id, title FROM tasks")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var task Task
+		err := rows.Scan(&task.ID, &task.Title)
+		if err != nil {
+			log.Println("Error scanning row:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "Task ID: %d, Title: %s\n", task.ID, task.Title)
+	}
+}
