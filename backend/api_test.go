@@ -180,3 +180,37 @@ func TestCreateTaskRoute(t *testing.T) {
 		t.Errorf("got %q, want %q", statementOutput, want)
 	}
 }
+
+func TestUpdateTask(t *testing.T) {
+	// Test that will first insert a task into the database, and then through request to the /update route handler will update a task. And then check if the update was successful by comparing the output of an sql select statement with the expected output
+	initDB()
+	defer db.Close()
+
+	_, err := db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('TaskToUpdate', 'TaskUpdateDesc', 'Status', 'Date');")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, _ := http.NewRequest("PATCH", "/update?id=1&title=UpdatedTitle&description=UpdatedDesc&status=UpdatedStatus&date=UpdatedDate", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(updateTaskHandler)
+
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
+	}
+	// Got will be the output of a SQL Select statement
+	want := "UpdatedTitle"
+
+	var statementOutput string
+
+	response := db.QueryRow("SELECT title FROM tasks WHERE title = ?;", want)
+	err = response.Scan(&statementOutput)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if statementOutput != want {
+		t.Errorf("got %q, want %q", statementOutput, want)
+	}
+}
