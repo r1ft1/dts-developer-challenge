@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"testing"
 )
 
@@ -35,15 +37,15 @@ func TestReadAllTasksRoute(t *testing.T) {
 	initDB()
 	defer db.Close()
 
-	_, err := db.Exec("INSERT INTO tasks VALUES (0, 'Task0', 'TaskDesc0', 'Status0', 'Date0');")
+	_, err := db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('Task0', 'TaskDesc0', 'Status0', 'Date0');")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = db.Exec("INSERT INTO tasks VALUES (1, 'Task1','TaskDesc1', 'Status1', 'Date1');")
+	_, err = db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('Task1','TaskDesc1', 'Status1', 'Date1');")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = db.Exec("INSERT INTO tasks VALUES (2, 'Task2', 'TaskDesc2', 'Status2', 'Date2');")
+	_, err = db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('Task2', 'TaskDesc2', 'Status2', 'Date2');")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +54,7 @@ func TestReadAllTasksRoute(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(readAllTasksHandler)
 
-	want := "Task ID: 0, Title: Task0\nTask ID: 1, Title: Task1\nTask ID: 2, Title: Task2\n"
+	want := "Task ID: 1, Title: Task0\nTask ID: 2, Title: Task1\nTask ID: 3, Title: Task2\n"
 
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
@@ -64,15 +66,84 @@ func TestReadAllTasksRoute(t *testing.T) {
 	}
 }
 
-func TestCreateTaskRoute(t *testing.T) {
+func TestDeleteTaskRoute(t *testing.T) {
+	//Test will take a task's ID through a /delete route. We will check if the route handler has deleted the task successfully by checking the database to see if that record is still present
 	initDB()
 	defer db.Close()
 
-	want := "Task created successfully!"
+	_, err := db.Exec("INSERT INTO tasks VALUES (5, 'TaskToDelete', 'TaskDeleteDesc', 'Status3', 'Date3');")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, _ := http.NewRequest("GET", "/delete?id=5", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteTaskHandler)
+
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
+	}
+	// Got will be the output of a SQL Select statement
+	want := "Task with ID 5 deleted successfully!"
+	got := rr.Body.String()
+
+	var statementOutput string
+	response := db.QueryRow("SELECT COUNT(*) FROM tasks WHERE ID = 5;")
+	err = response.Scan(&statementOutput)
+	//check if the sql statement returns 0 for count matching that ID
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//convert the string to an int
+	i, err := strconv.Atoi(statementOutput)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if i != 0 {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestGetTaskRoute(t *testing.T) {
+	//Test will insert a task into the Database directly and then make a request to the API's /get route, supplying the ID as a query param. We will check if the route handler returns the task associated with the supplied ID successfully by checking if the returned task is the same as the one we inserted
+	initDB()
+	defer db.Close()
+
+	_, err := db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('TaskToGet', 'TaskGetDesc', 'Status3', 'Date3');")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req, _ := http.NewRequest("GET", "/get?id=1", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(getTaskHandler)
+
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
+	}
+	// Got will be the output of a SQL Select statement
+	got := rr.Body.String()
+	want := "Task ID: 1, Title: TaskToGet, Description: TaskGetDesc, Status: Status3, DueDateTime: Date3"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestCreateTaskRoute(t *testing.T) {
+	// Test that will input a task into the Database through the /create route, will prepare a form to append to a request. To check we will read all the rows from the database and confirm that the new task is present.
+	initDB()
+	defer db.Close()
+
+	want := "Test Task"
+
 	// In testing don't need to catch the error from NewRequest as we know our route /create will correctly resolve in the test server
 	req, _ := http.NewRequest("POST", "/create", nil)
 
-	testTast := Task{
+	testTask := Task{
 		Title:       "Test Task",
 		Description: "This is a test task",
 		Status:      "Pending",
@@ -80,10 +151,10 @@ func TestCreateTaskRoute(t *testing.T) {
 	}
 	// req.Form takes a url.Values type so we'll convert our test data
 	formData := url.Values{
-		"title":         {testTast.Title},
-		"description":   {testTast.Description},
-		"status":        {testTast.Status},
-		"due_date_time": {testTast.DueDateTime},
+		"title":         {testTask.Title},
+		"description":   {testTask.Description},
+		"status":        {testTask.Status},
+		"due_date_time": {testTask.DueDateTime},
 	}
 	req.Form = formData
 
@@ -94,8 +165,18 @@ func TestCreateTaskRoute(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
 	}
-	got := rr.Body.String()
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
+
+	var statementOutput string
+
+	response := db.QueryRow("SELECT title FROM tasks WHERE title = ?;", want)
+	err := response.Scan(&statementOutput)
+	fmt.Println(statementOutput)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Want the sql statement output to be the title of the task we just inserted
+	if statementOutput != "Test Task" {
+		t.Errorf("got %q, want %q", statementOutput, want)
 	}
 }

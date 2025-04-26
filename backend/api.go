@@ -98,3 +98,29 @@ func readAllTasksHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Task ID: %d, Title: %s\n", task.ID, task.Title)
 	}
 }
+
+func getTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	row := db.QueryRow("SELECT id, title, description, status, due_date_time FROM tasks WHERE id = ?", id)
+	var task Task
+	err := row.Scan(&task.ID, &task.Title, &task.Description, &task.Status, &task.DueDateTime)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Task not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	fmt.Fprintf(w, "Task ID: %d, Title: %s, Description: %s, Status: %s, DueDateTime: %s", task.ID, task.Title, task.Description, task.Status, task.DueDateTime)
+}
+
+func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	_, err := db.Exec("DELETE FROM tasks WHERE id = ?", id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Task with ID %s deleted successfully!", id)
+}
