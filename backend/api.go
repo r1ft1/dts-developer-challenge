@@ -127,15 +127,12 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
-	title := r.URL.Query().Get("title")
-	description := r.URL.Query().Get("description")
 	status := r.URL.Query().Get("status")
-	dueDateTime := r.URL.Query().Get("date")
 
-	_, err := db.Exec("UPDATE tasks SET title = ?, description = ?, status = ?, due_date_time = ? WHERE id = ?", title, description, status, dueDateTime, id)
+	_, err := db.Exec("UPDATE tasks SET status = ? WHERE id = ?", status, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "Task with ID %s updated successfully!", id)
+	fmt.Fprintf(w, "Task with ID %s updated status to %s successfully!", id, status)
 }

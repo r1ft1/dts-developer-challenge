@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -71,27 +70,15 @@ func TestDeleteTaskRoute(t *testing.T) {
 	initDB()
 	defer db.Close()
 
-	_, err := db.Exec("INSERT INTO tasks VALUES (5, 'TaskToDelete', 'TaskDeleteDesc', 'Status3', 'Date3');")
+	_, err := db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('TaskToDelete', 'TaskDeleteDesc', 'Status3', 'Date3');")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	req, _ := http.NewRequest("GET", "/delete?id=5", nil)
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(deleteTaskHandler)
-
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
-	}
-	// Got will be the output of a SQL Select statement
-	want := "Task with ID 5 deleted successfully!"
-	got := rr.Body.String()
-
+	// show that in the database there is an inserted task, making the count 1
 	var statementOutput string
-	response := db.QueryRow("SELECT COUNT(*) FROM tasks WHERE ID = 5;")
+	response := db.QueryRow("SELECT COUNT(*) FROM tasks;")
 	err = response.Scan(&statementOutput)
-	//check if the sql statement returns 0 for count matching that ID
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,8 +89,41 @@ func TestDeleteTaskRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if i != 0 {
+	if i != 1 {
+		t.Errorf("got %q, want %q", i, 1)
+	}
+
+	req, _ := http.NewRequest("GET", "/delete?id=1", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(deleteTaskHandler)
+
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
+	}
+	// Got will be the output of a SQL Select statement
+	want := "Task with ID 1 deleted successfully!"
+	got := rr.Body.String()
+
+	if got != want {
 		t.Errorf("got %q, want %q", got, want)
+	}
+
+	response = db.QueryRow("SELECT COUNT(*) FROM tasks;")
+	err = response.Scan(&statementOutput)
+	//check if the sql statement returns 0 for count matching that ID
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//convert the string to an int
+	i, err = strconv.Atoi(statementOutput)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if i != 0 {
+		t.Errorf("got %q, want %q", i, 0)
 	}
 }
 
@@ -170,7 +190,6 @@ func TestCreateTaskRoute(t *testing.T) {
 
 	response := db.QueryRow("SELECT title FROM tasks WHERE title = ?;", want)
 	err := response.Scan(&statementOutput)
-	fmt.Println(statementOutput)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,12 +205,12 @@ func TestUpdateTask(t *testing.T) {
 	initDB()
 	defer db.Close()
 
-	_, err := db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('TaskToUpdate', 'TaskUpdateDesc', 'Status', 'Date');")
+	_, err := db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES ('TaskToUpdate', 'TaskUpdateDesc', 'Not Started', 'Date');")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	req, _ := http.NewRequest("PATCH", "/update?id=1&title=UpdatedTitle&description=UpdatedDesc&status=UpdatedStatus&date=UpdatedDate", nil)
+	req, _ := http.NewRequest("PATCH", "/update?id=1&status=Completed", nil)
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(updateTaskHandler)
 
@@ -200,11 +219,11 @@ func TestUpdateTask(t *testing.T) {
 		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
 	}
 	// Got will be the output of a SQL Select statement
-	want := "UpdatedTitle"
+	want := "Completed"
 
 	var statementOutput string
 
-	response := db.QueryRow("SELECT title FROM tasks WHERE title = ?;", want)
+	response := db.QueryRow("SELECT status FROM tasks WHERE id = ?;", 1)
 	err = response.Scan(&statementOutput)
 	if err != nil {
 		t.Fatal(err)
