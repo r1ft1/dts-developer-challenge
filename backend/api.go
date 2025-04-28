@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -9,11 +10,16 @@ import (
 )
 
 type Task struct {
-	ID          int
-	Title       string
-	Description string
-	Status      string
-	DueDateTime string
+	ID          int    `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	DueDateTime string `json:"due_date_time"`
+}
+
+type Response struct {
+	Message string `json:"message,omitempty"`
+	Tasks   []Task `json:"tasks,omitempty"`
 }
 
 var db *sql.DB
@@ -44,23 +50,31 @@ func initDB() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, title FROM tasks")
+	rows, err := db.Query("SELECT id, title, description, status, due_date_time FROM tasks")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	var tasks []Task
 	defer rows.Close()
 	for rows.Next() {
 		var task Task
-		err := rows.Scan(&task.ID, &task.Title)
+		err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status, &task.DueDateTime)
 		if err != nil {
 			log.Println("Error scanning row:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Fprintf(w, "Task ID: %d, Title: %s\n", task.ID, task.Title)
+		tasks = append(tasks, task)
 	}
-	fmt.Fprint(w, "Welcome to the Task Manager!")
+
+	response := Response{
+		Message: "Welcome to the Task Manager!",
+		Tasks:   tasks,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func createTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,8 +89,32 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		http.ResponseWriter.Write(w, []byte("Task created successfully!"))
-		http.ResponseWriter.WriteHeader(w, http.StatusOK)
+
+		tasks := []Task{}
+
+		task := Task{
+			Title:       title,
+			Description: description,
+			Status:      status,
+			DueDateTime: dueDateTime,
+		}
+
+		tasks = append(tasks, task)
+
+		response := Response{
+			Message: "Task Created Successfully",
+			Tasks:   tasks,
+		}
+		responseJson, err := json.Marshal(response)
+		if err != nil {
+			// Write error to server console is converting to json fails
+			fmt.Println("Error marshalling tasks to JSON:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(responseJson)
 	}
 }
 
