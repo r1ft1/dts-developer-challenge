@@ -160,6 +160,7 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	writeTasksAndMessage(w, fmt.Sprintf("Task ID %s deleted successfully!", id), nil)
 }
 
+// The specification only asks for the update function to update the status of the task
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	status := r.URL.Query().Get("status")
@@ -169,5 +170,6 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "Task with ID %s updated status to %s successfully!", id, status)
+
+	writeTasksAndMessage(w, fmt.Sprintf("Task ID %s updated status to %s successfully!", id, status), nil)
 }
