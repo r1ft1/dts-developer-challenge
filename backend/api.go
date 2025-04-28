@@ -68,13 +68,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		tasks = append(tasks, task)
 	}
 
-	response := Response{
-		Message: "Welcome to the Task Manager!",
-		Tasks:   tasks,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	writeTasksAndMessage(w, "Welcome to the Task Manager!", tasks)
 }
 
 func createTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,22 +94,25 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tasks = append(tasks, task)
-
-		response := Response{
-			Message: "Task Created Successfully",
-			Tasks:   tasks,
-		}
-		responseJson, err := json.Marshal(response)
-		if err != nil {
-			// Write error to server console is converting to json fails
-			fmt.Println("Error marshalling tasks to JSON:", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(responseJson)
+		message := "Task Created Successfully"
+		writeTasksAndMessage(w, message, tasks)
 	}
+}
+func writeTasksAndMessage(w http.ResponseWriter, message string, tasks []Task) {
+	response := Response{
+		Message: message,
+		Tasks:   tasks,
+	}
+	responseJson, err := json.Marshal(response)
+	if err != nil {
+		// Write error to server console is converting to json fails
+		fmt.Println("Error marshalling tasks to JSON:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(responseJson)
 }
 
 func readAllTasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +157,7 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "Task with ID %s deleted successfully!", id)
+	writeTasksAndMessage(w, fmt.Sprintf("Task ID %s deleted successfully!", id), nil)
 }
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {

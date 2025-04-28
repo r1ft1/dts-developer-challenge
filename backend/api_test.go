@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -25,9 +26,17 @@ func TestIndexRoute(t *testing.T) {
 		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
 	}
 	got := rr.Body.String()
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
+
+	var body Response
+	err = json.Unmarshal([]byte(got), &body)
+	if err != nil {
+		t.Error(err)
 	}
+
+	if body.Message != want {
+		t.Errorf("got %q, want %q", body.Message, want)
+	}
+
 }
 
 func TestReadAllTasksRoute(t *testing.T) {
@@ -102,11 +111,17 @@ func TestDeleteTaskRoute(t *testing.T) {
 		t.Errorf("got %v, want %v", rr.Code, http.StatusOK)
 	}
 	// Got will be the output of a SQL Select statement
-	want := "Task with ID 1 deleted successfully!"
+	want := "Task ID 1 deleted successfully!"
 	got := rr.Body.String()
 
-	if got != want {
-		t.Errorf("got %q, want %q", got, want)
+	var body Response
+	err = json.Unmarshal([]byte(got), &body)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if body.Message != want {
+		t.Errorf("got %q, want %q", body.Message, want)
 	}
 
 	response = db.QueryRow("SELECT COUNT(*) FROM tasks;")

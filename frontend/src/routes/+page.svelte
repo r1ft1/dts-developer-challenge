@@ -44,6 +44,26 @@
 		//Refreshes the page which rerequests the index route, which reads all tasks from the DB
 		invalidateAll();
 	};
+
+	const deleteTaskButtonHandler = (id: number) => async () => {
+		const deleteResponse = await fetch(
+			`http://localhost:8080/delete?id=${id}`,
+			{
+				method: "DELETE",
+			},
+		);
+
+		const data = await deleteResponse.json();
+		console.log(data);
+
+		if (deleteResponse.ok) {
+			console.log("FE: Task deleted successfully");
+		} else {
+			console.error("FE: Error deleting task:", data);
+		}
+
+		invalidateAll();
+	};
 </script>
 
 <h1>HMCTS Caseworker Task Management</h1>
@@ -68,6 +88,7 @@
 		status={task.status}
 		dueDateTime={task.due_date_time}
 	/>
+	<button onclick={deleteTaskButtonHandler(task.id)}> Delete Task </button>
 {/each}
 
 <style>
