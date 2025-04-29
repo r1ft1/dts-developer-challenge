@@ -2,15 +2,10 @@
 	import { invalidateAll } from "$app/navigation";
 	import Task from "$lib/components/Task.svelte";
 	import type { PageProps } from "./$types";
-	import { dev } from "$app/environment";
+	import { PUBLIC_API_URL } from "$env/static/public";
 
 	let { data }: PageProps = $props();
-	let API_URL = "";
-	if (dev) {
-		API_URL = "http://localhost:8080";
-	} else {
-		API_URL = "https://backend-production-93b4.up.railway.app";
-	}
+	const API_URL = PUBLIC_API_URL;
 
 	console.log(data);
 

@@ -2,9 +2,10 @@
 	"name": "tasksfrontend",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "NODE_ENV=development vite dev --mode development",
 		"start": "export PORT=5173; node build/index.js --port 5173",
 		"build": "vite build && npm run prepack",
+		"dockerBuild": "NODE_ENV=development vite build --mode development && npm run prepack",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"prepack": "svelte-kit sync && svelte-package && publint",
