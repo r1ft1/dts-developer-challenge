@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "vite dev",
+		"start": "node build/index.js",
 		"build": "vite build && npm run prepack",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
