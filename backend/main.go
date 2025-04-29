@@ -15,6 +15,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// because we can only set a single origin in the header, we will check what the request's origin is and compare it against a list, because we want the production url and development localhost url to be whitelisted
 	allowedOrigins := []string{
 		"http://localhost:5173",
+		"http://127.0.0.1:5173",
 		"https://frontend-production-f438.up.railway.app/",
 		"https://frontend-production-f438.up.railway.app",
 	}
