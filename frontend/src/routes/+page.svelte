@@ -16,6 +16,7 @@
 		// validation of inputs to check if title, status and date are not empty (description optional)
 		if (!titleInput || !statusInput || !dateInput) {
 			console.error("FE: Title, Status and Due Date Time are required");
+			alert("Title, Status and Due Date Time are required");
 			return;
 		}
 		const form = new FormData();
@@ -115,6 +116,7 @@
 		placeholder="Due Date Time"
 		bind:value={dateInput}
 	/>
+
 	<button onclick={createTaskButtonHandler}>Create Task</button>
 </div>
 

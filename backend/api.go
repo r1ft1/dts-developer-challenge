@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
+	_ "modernc.org/sqlite"
 	"net/http"
 )
 
