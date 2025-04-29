@@ -23,6 +23,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, allowedOrigin := range allowedOrigins {
 			if origin == allowedOrigin {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 				break
 			}
 		}
