@@ -7,9 +7,10 @@
 
 ## Frontend
 1. cd frontend
-2. npm i
-3. npm run dev
-4. go to http://localhost:5173
+2. touch .env && echo "PUBLIC_API_URL = \"https://backend-production-93b4.up.railway.app\"" >> .env
+3. npm i
+4. npm run dev
+5. go to http://localhost:5173
 
 
 # Live Preview
