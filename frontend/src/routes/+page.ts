@@ -14,8 +14,9 @@ type Task = {
 	due_date_time: string;
 };
 
+const apiUrl = process.env.API_URL || "http://localhost:8080/";
 export const load: PageLoad = async ({ fetch }) => {
-	const res = await fetch(`http://localhost:8080/`);
+	const res = await fetch(`${apiUrl}`);
 	const data: APIResponse = await res.json();
 
 	console.log(data);

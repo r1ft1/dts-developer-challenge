@@ -4,6 +4,7 @@
 	import type { PageProps } from "./$types";
 
 	let { data }: PageProps = $props();
+	const API_URL = process.env.API_URL || "http://localhost:8080";
 
 	console.log(data);
 
@@ -33,7 +34,7 @@
 		form.append("status", statusInput);
 		form.append("due_date_time", dateInput);
 
-		const createResponse = await fetch("http://localhost:8080/create", {
+		const createResponse = await fetch(`${API_URL}/create`, {
 			method: "POST",
 			body: form,
 		});
@@ -52,12 +53,9 @@
 	};
 
 	const deleteTaskButtonHandler = async (id: number) => {
-		const deleteResponse = await fetch(
-			`http://localhost:8080/delete?id=${id}`,
-			{
-				method: "DELETE",
-			},
-		);
+		const deleteResponse = await fetch(`${API_URL}/delete?id=${id}`, {
+			method: "DELETE",
+		});
 
 		const data = await deleteResponse.json();
 		console.log(data);
@@ -81,7 +79,7 @@
 	const updateTaskButtonHandler = async (id: number) => {
 		console.log("update clicked");
 		const updateResponse = await fetch(
-			`http://localhost:8080/update?id=${id}&status=${editStatusInput}`,
+			`${API_URL}/update?id=${id}&status=${editStatusInput}`,
 			{
 				method: "PUT",
 			},
