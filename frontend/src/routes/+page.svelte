@@ -71,10 +71,7 @@
 	};
 
 	let editing = $state(0);
-	let editTitleInput = $state("");
-	let editDescInput = $state("");
 	let editStatusInput = $state("");
-	let editDateInput = $state("");
 
 	const editTaskButtonHandler = (id: number) => {
 		editing = id;
@@ -139,16 +136,26 @@
 			</button>
 		</div>
 	{:else}
-		<div class="editTask">
-			{task.title}
-
-			{task.description}
-			<input
-				type="text"
-				placeholder={task.status}
-				bind:value={editStatusInput}
-			/>
-			{task.due_date_time}
+		<div class="task">
+			<div class="column">
+				{task.id}
+			</div>
+			<div class="column">
+				{task.title}
+			</div>
+			<div class="column">
+				{task.description}
+			</div>
+			<div class="column">
+				<input
+					type="text"
+					placeholder={task.status}
+					bind:value={editStatusInput}
+				/>
+			</div>
+			<div class="column">
+				{task.due_date_time}
+			</div>
 			<button onclick={() => updateTaskButtonHandler(task.id)}>
 				Update Task
 			</button>
@@ -165,11 +172,6 @@
 		width: 300px;
 	}
 	.task {
-		display: flex;
-		flex-direction: row;
-		gap: 1rem;
-	}
-	.editTask {
 		display: flex;
 		flex-direction: row;
 		gap: 1rem;

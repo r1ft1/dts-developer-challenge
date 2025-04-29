@@ -78,6 +78,16 @@ func createTaskHandler(w http.ResponseWriter, r *http.Request) {
 		status := r.FormValue("status")
 		dueDateTime := r.FormValue("due_date_time")
 
+		//Validate the input to check if title, status and duedate are present, reject and return an error back to the client if not
+		if title == "" || status == "" || dueDateTime == "" {
+			// var err error
+			// err = fmt.Errorf("Title, status and due date time are required")
+			writeTasksAndMessage(w, "Title, status and due date time are required", nil)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+			// http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
 		_, err := db.Exec("INSERT INTO tasks (title, description, status, due_date_time) VALUES (?, ?, ?, ?)", title, description, status, dueDateTime)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

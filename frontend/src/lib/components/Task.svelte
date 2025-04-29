@@ -2,4 +2,8 @@
 	let { id, title, description, status, dueDateTime } = $props();
 </script>
 
-<p>{id}{title}{description}{status}{dueDateTime}</p>
+<div>{id}</div>
+<div>{title}</div>
+<div>{description}</div>
+<div>{status}</div>
+<div>{dueDateTime}</div>
