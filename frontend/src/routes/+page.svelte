@@ -9,7 +9,7 @@
 	if (dev) {
 		API_URL = "http://localhost:8080";
 	} else {
-		API_URL = "backend-production-93b4.up.railway.app";
+		API_URL = "https://backend-production-93b4.up.railway.app";
 	}
 
 	console.log(data);
