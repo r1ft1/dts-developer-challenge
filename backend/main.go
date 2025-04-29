@@ -16,6 +16,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	allowedOrigins := []string{
 		"http://localhost:5173",
 		"https://frontend-production-f438.up.railway.app/",
+		"https://frontend-production-f438.up.railway.app",
 	}
 	origin := r.Header.Get("Origin")
 	if origin != "" {
